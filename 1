@@ -1,0 +1,126 @@
+//read file
+const fs = require('fs');
+
+function add(a, b, callback) {
+  let result = a + b;
+  callback(result);
+}
+
+// Chain with multiplication
+add(2, 3, function(sum) {
+  let multiplied = sum * 10;
+  console.log("Multiplied Result:", multiplied);
+
+  // Read file after multiplication
+  fs.readFile('info.txt', 'utf8', (err, data) => {
+    if (err) return console.error("Error reading file:", err);
+    console.log("Contents of info.txt:\n", data);
+  });
+});
+
+
+2. Countdown Timer and Demonstrating Asynchronous Behavior
+js
+Copy
+Edit
+console.log("Countdown starts...");
+
+// Countdown using setTimeout
+setTimeout(() => {
+  console.log("3...");
+}, 1000);
+
+setTimeout(() => {
+  console.log("2...");
+}, 2000);
+
+setTimeout(() => {
+  console.log("1...");
+}, 3000);
+
+// Another async log
+setTimeout(() => {
+  console.log("Hello after 1 second (async)");
+}, 1000);
+
+console.log("This runs first due to async nature!");
+
+
+3. Event Emitter Example
+js
+Copy
+Edit
+const EventEmitter = require('events');
+const emitter = new EventEmitter();
+
+// Listener for 'greet'
+emitter.on('greet', () => {
+  console.log("Hello! Event emitted.");
+});
+
+// Listener for 'login'
+emitter.on('login', (username) => {
+  console.log(`${username} has logged in`);
+});
+
+// Emit events
+emitter.emit('greet');
+emitter.emit('login', 'john_doe');
+Exercise 2: Buffers, Streams, and File System
+
+
+4. Buffer Modification
+js
+Copy
+Edit
+let buf = Buffer.from("Node.js");
+
+// Print buffer in hexadecimal
+console.log("Hex:", buf.toString('hex'));
+
+// Change 'N' (ascii 78) to 'C' (ascii 67)
+buf[0] = 67;
+
+// Print modified buffer
+console.log("Modified Buffer:", buf.toString());
+
+
+5. Reading with Readable Stream
+js
+Copy
+Edit
+const fs = require('fs');
+
+const stream = fs.createReadStream('data.txt', 'utf8');
+
+stream.on('data', (chunk) => {
+  console.log("Received chunk:", chunk);
+});
+
+stream.on('end', () => {
+  console.log("Finished reading.");
+});
+
+/*
+✅ Benefit of streams:
+- fs.readFile() loads entire file into memory → bad for big files.
+- Stream reads in small parts (chunks) → better performance.
+*/
+
+
+6. Write and Read File with Callbacks
+js
+Copy
+Edit
+const fs = require('fs');
+
+// Write to file
+fs.writeFile('welcome.txt', 'Welcome to Node.js', (err) => {
+  if (err) return console.error("Write Error:", err);
+
+  // Read after writing
+  fs.readFile('welcome.txt', 'utf8', (err, data) => {
+    if (err) return console.error("Read Error:", err);
+    console.log("Content of welcome.txt:", data);
+  });
+});
