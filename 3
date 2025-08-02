@@ -1,0 +1,360 @@
+    4. Design a feedback form for a travel website using Express 
+        ◦ The form should collect name, email, and a description of an issue.
+        ◦ On submission, display the input using EJS.
+Index.js
+import express from 'express';
+
+const app = express();
+const port = 3001;
+
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
+
+app.get('/', (req, res) => {
+  res.render('feedback');
+});
+
+app.post('/submit', (req, res) => {
+  const { name, email, issue } = req.body;
+  res.render('result', { name, email, issue });
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
+Feedback.ejs
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Travel Feedback</title>
+</head>
+<body>
+  <h1>Submit Feedback</h1>
+  <form action="/submit" method="POST" enctype="multipart/form-data">
+    <label>Name:</label><br>
+    <input type="text" name="name" required><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
+
+    <label>Description of the issue:</label><br>
+    <textarea id="issue" name="issue" rows="6" required></textarea>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
+
+Result.ejs
+
+<!DOCTYPE html>
+<html>
+<head>
+  	<title>Feedback Submitted</title>
+</head>
+<body>
+  <h1>Thank You for Your Feedback!</h1>
+  <p><strong>Name:</strong> <%= name %></p>
+  <p><strong>Email:</strong> <%= email %></p>
+  <p><strong>Issue:</strong> <%= issue %></p>
+</body>
+</html>
+
+
+    5. Build a recipe page using Pug templating:
+        ◦ Pass dynamic recipe data (name, ingredients, steps) to the Pug view.
+        ◦ Apply external CSS for layout and inline CSS for highlighting ingredients.
+        ◦ Include a virtual path for serving images used in the recipe view (/assets).
+import express from 'express';
+const app = express();
+const port = 3001;
+
+app.set('view engine', 'pug');
+app.use(express.static('views'));
+
+// Virtual path for images
+app.use('/assets', express.static('assets'));
+
+const recipe = {
+  name: "Pasta Alfredo",
+  image: "/assets/dish.png",
+  ingredients: ["Pasta", "Cream", "Garlic", "Parmesan Cheese", "Butter"],
+  steps: [
+    "Boil the pasta until al dente.",
+    "Prepare Alfredo sauce with butter, garlic, and cream.",
+    "Add cheese and stir until melted.",
+    "Mix pasta with sauce and serve hot."
+  ]
+};
+
+app.get('/', (req, res) => {
+  res.render('recipe', { recipe });
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
+Recipe.pug
+doctype html
+html
+  head
+    title= recipe.name
+    link(rel="stylesheet", href="/external.css")
+  body
+    header
+      h1= recipe.name
+
+    img(src=recipe.image, alt=recipe.name, class="dish")
+
+    h2 Ingredients
+    ul
+      each item in recipe.ingredients
+        li(style="color: darkgreen; font-weight: bold")= item
+
+    h2 Steps
+    ol
+      each step in recipe.steps
+        li= step
+
+    footer
+      p &copy; 2025 Recipe Book
+
+External.css
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+header {
+  background-color: #e67e22;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+h2 {
+  color: #333;
+  margin-top: 2rem;
+}
+
+img.dish {
+  display: block;
+  width: 20%;
+  height: 40%;
+  height: auto;
+  margin: 1rem auto;
+  border-radius: 10px;
+}
+
+ul, ol {
+  margin-left: 2rem;
+}
+
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  color: #888;
+}
+
+Exercise 3 – Express JS
+(Covers Cookies, Sessions, Authentication)
+    6. Create a student portal login system using Express.js
+        ◦ Create a /register route to add a student with a rollNo, name, and password.
+        ◦ Use express-session to store the session after successful login from /login.
+        ◦ On login, also set a cookie studentPortalAccess with the student's roll number and an expiry of 3 minutes.
+        ◦ Use middleware (cookie-parser and express-session) to manage cookies and sessions.
+import express from 'express';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+
+const app = express();
+const PORT = 3001;
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+  secret: 'student-secret',
+  resave: false,
+  saveUninitialized: false
+}));
+
+const students = [];
+
+app.post('/register', (req, res) => {
+  const { rollNo, name, password } = req.body;
+  if (students.some(s => s.rollNo === rollNo)) {
+    return res.status(400).send('Already registered');
+  }
+  students.push({ rollNo, name, password });
+  res.send('Registered successfully');
+});
+
+app.post('/login', (req, res) => {
+  const { rollNo, password } = req.body;
+  const student = students.find(s => s.rollNo === rollNo && s.password === password);
+  if (!student) return res.status(401).send('Invalid credentials');
+  req.session.student = student;
+  res.cookie('studentPortalAccess', rollNo, { maxAge: 3 * 60 * 1000 });
+  res.send(`Welcome ${student.name}`);
+});
+
+app.get('/result', (req, res) => {
+  if (!req.session.student) return res.status(401).send('Access denied: Please login');
+  res.send(`Hi ${req.session.student.name}, your results are available!`);
+});
+
+app.get('/logout', (req, res) => {
+  res.clearCookie('studentPortalAccess');
+  req.session.destroy();
+  res.send('Logged out');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`)
+});
+
+    7. Design a protected route /result that only logged-in students can access
+        ◦ Use session middleware to verify if the student is logged in.
+        ◦ If valid, show: "Hi [name], your results are available!".
+        ◦ If not, return: "Access denied: Please login to view results."
+        ◦ Add a /logout route to destroy the session and clear the cookie.
+import express from 'express';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+const app = express();
+const PORT = 3001;
+app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
+
+const users = [
+  { id: 1, username: 'student1', name: 'Alice', password: 'password1' },
+  { id: 2, username: 'student2', name: 'Bob', password: 'password2' }
+];
+
+const authenticate = (req, res, next) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  next();
+};
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username && u.password === password);
+  
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  req.session.userId = user.id;
+  res.json({ message: `Welcome ${user.name}!` });
+});
+
+app.get('/result', authenticate, (req, res) => {
+  const user = users.find(u => u.id === req.session.userId);
+  res.send(`Hi ${user.name}, your results are available!`);
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Successfully logged out' });
+  });
+});
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`)
+});
+
+    8. Build a course enrollment route /courses with GET and POST
+        ◦ Use GET /courses to return a list of available courses (only if logged in).
+        ◦ Use POST /courses to enroll the logged-in student into a course.
+        ◦ On successful enrollment, create a cookie named lastEnrolledCourse (valid for 2 mins).
+import express from 'express';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+
+const app = express();
+app.use(express.json(), cookieParser(), session({
+  secret: 'secret',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge:2 * 60 * 1000 } // 2 min
+}));
+
+// Sample users and courses
+const courses = [
+  { id: 1, name: 'CS Basics' },
+  { id: 2, name: 'JavaScript' },
+  { id: 3, name: 'Data Structures' }
+];
+
+const users = [
+  { id: 1, username: 'student1', password: 'pass1', enrolled: [] },
+  { id: 2, username: 'student2', password: 'pass2', enrolled: [] }
+];
+
+// Auth middleware
+const auth = (req, res, next) => {
+  const user = users.find(u => u.id === req.session.userId);
+  if (!user) return res.status(401).json({ error: 'Not logged in' });
+  req.user = user;
+  next();
+};
+
+// Login
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username && u.password === password);
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  req.session.userId = user.id;
+  res.json({ message: 'Login successful' });
+});
+
+// Logout
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logged out' });
+  });
+});
+
+// GET /courses
+app.get('/courses', auth, (req, res) => {
+  res.json({
+    availableCourses: courses,
+    enrolledCourses: req.user.enrolled
+  });
+});
+
+// POST /courses
+app.post('/courses', auth, (req, res) => {
+  const id = parseInt(req.body.courseId);
+  const course = courses.find(c => c.id === id);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+  if (req.user.enrolled.includes(id)) {
+    return res.status(400).json({ error: 'Already enrolled' });
+  }
+
+  req.user.enrolled.push(id);
+  res.cookie('lastEnrolledCourse', course.name, { maxAge: 2 * 60 * 1000, httpOnly: true });
+  res.json({ message: `Enrolled in ${course.name}` });
+});
+
+// Server start
+app.listen(3001, () => {
+    console.log('Server running on http://localhost:3001')
+});
